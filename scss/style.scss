@@ -73,3 +73,66 @@ img {
  * YOUR CODE HERE
  */
 
+.imgContainer {
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    z-index: 0;
+
+        img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+            min-width: 50%;
+            min-height: 50%;
+            opacity: 0.9;
+        }
+    }
+
+
+.weatherContainer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 900px;
+    height: 600px;
+    margin: auto;
+    background-color: #fff7a8;
+    z-index: 100;
+    opacity: 0.8;
+}
+
+h1 {
+    position: absolute;
+    top: 30px;
+    left: 124px;
+    color: #0c2b60;
+    font-family: 'Pacifico', cursive;
+    z-index: 100;
+}
+
+input {
+    position: absolute;
+    z-index: 100;
+    border-color: #0c2b60;
+    height: 5%;
+    font-size: 19px;
+    font-family: Palatino;
+    margin: auto;
+    top: 120px;
+    left: 0;
+    right: 0;
+    width: 25%;
+    position: absolute;
+    text-align: center;
+}
+
+
+
