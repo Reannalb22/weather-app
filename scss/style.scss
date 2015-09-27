@@ -109,24 +109,7 @@ img {
     opacity: 0.8;
     text-align: center;
 
-        div#currentView {
-            padding: 60px;
-        
-            p {
-                font-style: Palatino;
-                font-size: 24px;
-                text-align: center;
-            }
-        }
-
-        button {
-            width: 80px;
-            height: 80px;
-            transform: translateY(0%);
-            margin: 2%;
-        }
-
-        input {
+          input {
             position: absolute;
             z-index: 100;
             border-color: #0c2b60;
@@ -142,29 +125,53 @@ img {
             text-align: center;
         }
 
-        div#dailyView {
-            div {
-                display: flex;
+        div#currentView {
+            padding: 60px;
+            display: block;
+        
+            p {
+                font-style: Palatino;
+                font-size: 24px;
+                text-align: center;
+            }
+        
+
+            button {
+                width: 80px;
+                height: 80px;
+                transform: translateY(0%);
+                margin: 2%;
+            } 
+        }
+
+        div {
+            display: flex;
+            font-size: 16px;
+            
+            div#dailyView {
                 transform: translateY(10%);
-                
+        
                 ul {
                     list-style-type: none;
                     flex: 1;
                 }
             }
         }
+        
 
-        div#hourlyView {
-            div {
-                display: flex;
-            }
-
-            ul { 
-                list-style-type: none;
-                flex: 1;
+        div {
+            display: flex;
+            
+            div#hourlyView {
+                
+                ul { 
+                    list-style-type: none;
+                    flex: 1;
+                }
             }
         }
     }
+        
 
 h1 {
     position: absolute;
