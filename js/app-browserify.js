@@ -10,19 +10,13 @@ var $ = require('jquery'),
 
 
 var WeatherModel = Backbone.Model.extend({
+
+	lat: '29.7604',
+	long: '-95.3698',
 	
 	url: function(){
-		return "https://api.forecast.io/forecast/55fd4415dbaf5029ad9b6cb7d69c60f5/" + this.city
+		return `https://api.forecast.io/forecast/55fd4415dbaf5029ad9b6cb7d69c60f5/${this.lat},${this.long}`
 	},
-
-	// url: function(){
-	// 	return "https://maps.googleapis.com/maps/api/geocode/json?address=" + location_name + "&key=AIzaSyDUp3eghUt-Hci8CWQezf40OBuBs2oDJuI"
-	// },
-
-	// weatherUrl: function(){
-	// 	return "https://api.forecast.io/forecast/55fd4415dbaf5029ad9b6cb7d69c60f5/" + latitude + "," + longitude
-	// }
-	
 
 	parse: function(responseData) {
 		console.log(responseData)
@@ -43,7 +37,7 @@ var CurrentView = Backbone.View.extend({
 
 	getApparentTemp: function(){
 		var apparentTemperature = this.model.attributes.currently.apparentTemperature
-		var tempString = `Current Temperature: ${apparentTemperature} Degrees Fahrenheit`
+		var tempString = `Current Temperature: ${apparentTemperature}&deg F`
 		return tempString
 	},
 
@@ -80,8 +74,8 @@ var CurrentView = Backbone.View.extend({
 		console.log('event triggered')
 		if (event.keyCode === 13){
 			var inputEl = event.target,
-				city = inputEl.value
-			location.hash = `weather/${city}`
+				query = inputEl.value
+			location.hash = `weather/${query}`
 		}
 	},
 
@@ -97,11 +91,13 @@ var CurrentView = Backbone.View.extend({
 	render: function(){
 		console.log('here comes the weather method in render method')
 		console.log(this.model)
+		var cityName = location.hash.replace("#weather/", "")
 		this.$el.html(
-			`<input type="text" placeholder="Please Enter Your City by Lat,Lng"></input>
+			`<input type="text" placeholder="Please Enter Your City"></input>
 			<div id="currentView">
 			<button type="button" value="hourly">Hourly</button>
 			<button type="button" value="daily">Daily</button>
+				<p>${cityName}</p>
 				<p>${this.getSummary()}</p>
 				<p>${this.getApparentTemp()}</p>
 				<p>${this.getHumidity()}</p>
@@ -120,28 +116,34 @@ var DailyView = Backbone.View.extend({
 	
 	el: "#weatherContainer",
 
-
 	getDailyDiv: function(dayObj){
 		var htmlString_day = `
 		<div id='dailyView'>
 			<ul>
 				<li> Summary: ${dayObj.summary}</li>
-				<li> High: ${dayObj.temperatureMax} Degrees Fahrenheit</li>
-				<li> Low: ${dayObj.temperatureMin} Degrees Fahrenheit</li>
-				<li> Humidity: ${dayObj.humidity}</li>
-				<li> Precipitation: ${dayObj.precipProbability}</li>
-				<li> Wind Speed: ${dayObj.windSpeed}</li>
+				<li> High: ${dayObj.temperatureMax}&deg F</li>
+				<li> Low: ${dayObj.temperatureMin} &deg F</li>
+				<li> Humidity: ${dayObj.humidity}%</li>
+				<li> Precipitation: ${dayObj.precipProbability}%</li>
+				<li> Wind Speed: ${dayObj.windSpeed}mph</li>
 			</ul>
 		</div>`
 		return htmlString_day
 	},
 
+
+	// handleBackButton: function(event){
+	// 	console.log('back button clicked')
+	// 	location.hash.split('/')[1]
+	// 	location.hash = '29.7604,-95.3698'
+	// 	console.log(location.hash)
+	// },
+
 	render: function(){
 		console.log('here comes the weather')
 		console.log(this.model)
-
 		var htmlString = "<div>",
-			days = this.model.attributes.daily.data
+			days = this.model.attributes.daily.data.slice(0,7)
 			days.forEach((obj) => {
 				htmlString += this.getDailyDiv(obj)
 			})
@@ -151,22 +153,22 @@ var DailyView = Backbone.View.extend({
 		this.$el.html(htmlString)		
 	},
 
-	initialize: function(){
-		
-	}
 })
 
 var HourlyView = Backbone.View.extend({
+	
 	el: "#weatherContainer",
+	
 
 	getHourlyDiv: function(hourlyObj){
+
 		var htmlString_hour = `
 		<div id='hourlyView'>
 			<ul>
-				<li> Time: ${hourlyObj.time}</li>
+				<li> ${hourlyObj.time}</li>
 				<li> Summary: ${hourlyObj.summary}</li>
-				<li> Temperature: ${hourlyObj.temperature} Degrees Fahrenheit </li>
-				<li> Precipitation: ${hourlyObj.precipProbability}</li>
+				<li> Temperature: ${hourlyObj.temperature}&deg F</li>
+				<li> Precipitation: ${hourlyObj.precipProbability}%</li>
 			</ul>
 		</div>`
 		return htmlString_hour
@@ -175,7 +177,7 @@ var HourlyView = Backbone.View.extend({
 	render: function(){
 		console.log('here comes hourly weather')
 		var htmlString = "<div>",
-			hours = this.model.attributes.hourly.data
+			hours = this.model.attributes.hourly.data.slice(0,8)
 			hours.forEach((obj) => {
 				htmlString += this.getHourlyDiv(obj)
 			})
@@ -183,9 +185,6 @@ var HourlyView = Backbone.View.extend({
 		this.$el.html(htmlString)
 	},
 
-	initialize: function(){
-
-	}
 })
 
 
@@ -193,47 +192,51 @@ var HourlyView = Backbone.View.extend({
 
 var WeatherRouter = Backbone.Router.extend({
 	routes: {
-		'weather/:city/daily': 'showDailyResults',
-		'weather/:city/hourly': 'showHourlyResults',
-		'weather/:city': 'showSearchResults',
+		// 'weather/:query/currently': 
+		'weather/:query/daily': 'showDailyResults',
+		'weather/:query/hourly': 'showHourlyResults',
+		'weather/:query': 'getCoordsFromCity',
 		'*anyroute': 'showDefault'
 	},
 
-	// getLatLng: function(){
-	// 	var lat = data.results.geometry.location.lat
-	// 	var lng = data.results.geometry.location.lng
-		
-	// }
 
-	// dayOfWeek = function(){
-	// var days = "Sun Mon Tues Wedns Thurs Fri Sat".split(' '),
-		
-	// }
-
-	showDefault: function() {
-		this.wm.city = "29.7604,-95.3698"
+	showDefault: function(query){
+		this.wm.query = '29.7604,-95.3698' 
 		this.wm.fetch({
 			processData: true,
 			dataType: 'jsonp'
 		})
-	},
 
-	showSearchResults: function(city) {
-		console.log('responding to hash in showSearchResults')
-		this.wm.city = city
-		this.wm.fetch({
-			processData: true,
-			dataType: 'jsonp'
+	},
+		
+	getCoordsFromCity : function(query){
+		var actualRouter = this
+		return $.ajax({
+			url: 'https://maps.googleapis.com/maps/api/geocode/json',
+			data: {
+				address: query,
+				key: 'AIzaSyDUp3eghUt-Hci8CWQezf40OBuBs2oDJuI'
+			},
+			success: function(response){
+				console.log('got geocode result')
+				console.log(response)
+				var lat = response.results[0].geometry.location.lat,
+					lng = response.results[0].geometry.location.lng
+				actualRouter.wm.lat = lat
+				actualRouter.wm.long = lng
+				actualRouter.wm.fetch({
+					dataType: 'jsonp'
+				})
+			}
 		})
 	},
-	
 
-	showDailyResults: function(city, daily){
+	showDailyResults: function(query, daily){
 		console.log('responding to hash')
 		this.dv.render()
 	},
 
-	showHourlyResults: function(city, hourly){
+	showHourlyResults: function(query, hourly){
 		console.log('responding to hash for hourly')
 		this.hv.render()
 	},
@@ -250,8 +253,12 @@ var WeatherRouter = Backbone.Router.extend({
 var thisRouter = new WeatherRouter()
 
 
-// window.DailyView = DailyView
 
+// getCoordsFromCity(query).done(function(arg){
+// 	console.log('got geocode result')
+// 	console.log(arg)
+// })
+// window.DailyView = DailyView
 
 
 
@@ -274,5 +281,27 @@ var thisRouter = new WeatherRouter()
 // 			}
 // 		})
 // 	},
+
+// showDefault: function(response){
+	
+// 		this.wm.city = response.coords.latitude + ',' + response.coords.longitude
+// 		this.wm.fetch({
+// 			processData: true,
+// 			dataType: 'jsonp'
+// 		})
+// 	},
+// 	navigator.geolocation.getCurrentPosition(showDefault)
+
+	// showSearchResults: function(city) {
+	// 	console.log('responding to hash in showSearchResults')
+	// 	this.wm.city = city
+	// 	this.wm.fetch({
+	// 		processData: true,
+	// 		dataType: 'jsonp'
+	// 	})
+	// },
+
+
+
 
 
